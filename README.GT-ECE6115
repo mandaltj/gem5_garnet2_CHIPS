@@ -1,0 +1,116 @@
+##README
+
+This README is intended for the students of ECE 6115,
+
+Contact (Srikant Bharadwaj) or (Tushar Krishna) for more info about this repository.
+
+#Recommended tools:
+scons 2.5.1
+python 2.7.12
+
+All the commands assume you are in the top level gem5 directory
+where this README exists.
+
+1. Build the gem5 binary with MESI two level protocol
+scons ./build/X86_MESI_Two_Level/gem5.opt -j24
+
+2. Quick hello world simulation with 1 CPU in SE mode:
+./build/X86_MESI_Two_Level/gem5.opt -d outDir ./configs/example/se.py -c ./tests/test-progs/hello/bin/x86/linux/hello
+
+3. Fetch SPEC binaries and input data
+./ece-scripts/spec-fetcher.sh
+
+4. Run mcf benchmark in a 16-core mesh system
+
+./build/X86_MESI_Two_Level/gem5.opt \
+-d outDir ./configs/example/se.py \
+--network=garnet2.0 \
+--cpu-clock=1GHz \
+--ruby-clock=1GHz \
+--topology=Mesh_XY_MESI \
+--mesh-rows=4 \
+--cpu-type=DerivO3CPU \
+--ruby \
+--num-cpus=16 \
+-c ./benchmarks/SPEC/429.mcf/src/benchmark \
+-o ./benchmarks/SPEC/429.mcf/data/inp.in
+
+
+-d outDir is the output directory which would contain the configuration files (config.ini and config.json)
+and the stats.txt file after completion of the simulation.
+
+--network specifies the network type to use. Use garnet2.0 unless there is a need to use simple.
+
+--topology specifies the topology file to use. These are located in configs/topologies/. You can create
+your own.
+
+--mesh-rows is specific to mesh topologies whihc specifies the rows of mesh to be configured.
+
+--cpu-type is the type of CPU to use. Use DerivO3CPU.
+
+--ruby is for using the gem5 ruby memory system.
+
+--num-cpus represents the number of CPUs to configure.
+
+-c is for the benchmark binary. Change it for each benchmark as needed.
+
+-o is for arguments to the benchmark binary. Change it for each benchmark as needed.
+
+The last two options represent the binary and the input arguments to the binary.
+Change them depending on the benchmark you want to run.
+
+5. To debug topology use --print-topology argument which prints out info from topology
+
+./build/X86_MESI_Two_Level/gem5.opt \
+-d outDir ./configs/example/se.py \
+--print-topology \
+--network=garnet2.0 \
+--cpu-clock=1GHz \
+--ruby-clock=1GHz \
+--topology=Mesh_XY_MESI \
+--mesh-rows=4 \
+--cpu-type=DerivO3CPU \
+--ruby \
+--num-cpus=16 \
+-c ./benchmarks/SPEC/429.mcf/src/benchmark \
+-o ./benchmarks/SPEC/429.mcf/data/inp.in
+
+6. To run smaller simulations you can set the max number of instructions to simulate by
+using the -I option:
+
+./build/X86_MESI_Two_Level/gem5.opt \
+-d outDir ./configs/example/se.py \
+--print-topology \
+--cpu-clock=1GHz \
+--ruby-clock=1GHz \
+--network=garnet2.0 \
+--topology=Mesh_XY_MESI \
+--mesh-rows=4 \
+--cpu-type=DerivO3CPU \
+--ruby \
+--num-cpus=16 \
+-I 10000 \
+-c ./benchmarks/SPEC/429.mcf/src/benchmark \
+-o ./benchmarks/SPEC/429.mcf/data/inp.in
+
+
+Garnet and HeteroGarnet
+Details about Garnet can be read at https://www.gem5.org/documentation/general_docs/ruby/garnet-2/
+
+Details about using HeteroGarnet can be found in README file in configs/topologies
+
+Benchmark commands and arguments:
+1. SPEC-bzip
+-c ./benchmarks/SPEC/401.bzip2/src/benchmark -o './benchmarks/SPEC/401.bzip2/data/input.program 10'
+
+2. SPEC-mcf
+-c ./benchmarks/SPEC/429.mcf/src/benchmark -o ./benchmarks/SPEC/429.mcf/data/inp.in
+
+3. SPEC-hmmer
+-c ./benchmarks/SPEC/456.hmmer/src/benchmark -o '--fixed 0 --mean 325 --num 45000 --sd 200 --seed 0 ./benchmarks/SPEC/456.hmmer/data/bombesin.hmm'
+
+4. SPEC-sjeng
+-c ./benchmarks/SPEC/458.sjeng/src/benchmark -o ./benchmarks/SPEC/458.sjeng/data/test.txt
+
+5. SPEC-lbm
+-c ./benchmarks/SPEC/470.lbm/src/benchmark -o '20 ./benchmarks/SPEC/470.lbm/data/reference.dat 0 1 ./benchmarks/SPEC/470.lbm/data/100_100_130_cf_a.of'

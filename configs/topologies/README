@@ -1,0 +1,101 @@
+# HeteroGarnet - A tool for simulating heterogenous networks
+
+Traditional NoC topologies were largely explored along three dimensions of cost: number of links, number of routers, and number of router ports. Exploring the design space in such directions needs the support of tools which can model such heterogeneity. This motivated us to develop HeteroGarnet, building upon the widely used Garnet NoC model within gem5.
+
+
+Key features of HeteroGarnet:
+
+* Multiple-frequency domains
+
+* Subnetwork capability
+
+* Multiple-width domains
+
+* Heterogenous routers and buffers
+
+* CDC and SerDes models
+
+
+## To enable multiple clock-domains:
+
+1. First create a clock domain. Examples:
+
+    router_clk = SrcClockDomain(clock = router_freq,
+                            voltage_domain = VoltageDomain(
+                            voltage = options.sys_voltage))
+
+    link_clk = SrcClockDomain(clock = link_freq,
+                            voltage_domain = VoltageDomain(
+                            voltage = options.sys_voltage))
+
+2. Configure the clock domain of the links or routers to set the new clock domain. Examples:
+
+    routers[router_id].clk_domain = router_clk
+
+    IntLink(link_id=link_count,
+               src_node=routers[east_out],
+               dst_node=routers[west_in],
+               clk_domain = link_clk,
+               latency = link_latency,
+               weight=1)
+
+3. Don't forget to add clock domain crossing units (CDCs) wherever required. Example:
+   If you want to add a CDC at both ends of a link:
+
+    IntLink(link_id=link_count,
+               src_node=routers[west_out],
+               dst_node=routers[east_in],
+               src_cdc = true,
+               dst_cdc = true,
+               clk_domain = link_clk,
+               latency = link_latency,
+               weight=1)
+
+There is an example Mesh-based multiple clock-domain config in configs/topologies/Mesh_VF.py
+
+## To enable multiple width domains
+
+1. Configure the links and router to set the new width of bus (in Bytes). Examples:
+
+    routers[router_id].width = 32
+
+    IntLink(link_id=link_count,
+               src_node=routers[east_out],
+               dst_node=routers[west_in],
+               width = 32,
+               latency = link_latency,
+               weight=1)
+
+
+2. Don't forget to add Serializer-Deserializer (SerDes) wherever required. Example:
+
+    IntLink(link_id=link_count,
+        src_node=routers[east_out],
+        dst_node=routers[west_in],
+        src_serdes = true,
+        dst_serdes = true,
+        width = 32,
+        latency = link_latency,
+        weight=1)
+
+There is an example Mesh-based multiple width-domain config in configs/topologies/Mesh_SerDes.py
+
+
+## To enable subnetworks:
+
+1. Configure the vnets each link is allowed to carry suing the option `supported_vnets`. Example:
+
+    ExtLink(link_id = link_count,
+        ext_node = l1_cache[l1_index],
+        int_node = routers[router_id],
+        supported_vnets = [4,5,11]
+        )
+
+
+## To enable heterogenous buffers within routers:
+
+1. Configure the vcs_per_vnet value for the routers using `vcs_per_vnet` variable.
+
+    routers[router_id].vcs_per_vnet = 20
+
+
