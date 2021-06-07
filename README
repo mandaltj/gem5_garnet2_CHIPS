@@ -39,3 +39,34 @@ http://www.gem5.org/Download
 If you have questions, please send mail to gem5-users@gem5.org
 
 Enjoy using gem5 and please share your modifications and extensions.
+
+Comments:
+1) In order to run the simulation the file "my_scripts/GTRocket_hammer.sh" needs to be run with the correct benchmark name. 
+For example, if we wish to run perlbench then in command line we would do "./my_scripts/GTRocket_hammer.sh perlbench".
+
+The GTRocket_hammer.sh already contains the SPEC benchmark commands and their inputs. All we need to do is install SPEC 
+somewhere in our directory structure preferrably outside the gem5 repo. The path can be seen at the top of the
+GTRocket_hammer.sh script.
+
+2) All the configurations are at the bottom of the file. The only important configurations are:
+	a) sni=0/1 <- This enables the SNIs at the interposer link boundary.
+	b) vcs-per-vnet <- Configuration for number of virtual channels per vnet
+	
+3) In order to run the sni enabled configuration two things need to be done:
+	a) sni=1 in the GTRocket_hammer script
+	b) In the file src/mem/ruby/network/garnet/NetworkInterface.cc; there is a configuration:
+	
+	if(p->id == 64 || p->id == 65 || p->id == 66 || p->id == 67){
+        enSNI=true;
+		//enSNI=false;
+		
+	We need to comment/uncomment the code with enSNI=true to enable the SNIs at the MC<->interposer boundary.
+	Unfortunately, it was difficult to link this with "sni" param in GTRocket_hammer script due to pointer conflicts.
+	This was the lazy/easy way out.
+	
+	c) Now after this, gem5 needs to be rebuild for the change to take effect. Use the following command:
+	 scons build/X86_MOESI_hammer/gem5.opt SLICC_HTML=True -j4
+
+Tip:- The best way that I could think of two run the SNI enabled and disabled configurations is to have two gem5 repo. One with SNI enabled and the
+other with disabled build. And then run the simulations parallely.
+	
